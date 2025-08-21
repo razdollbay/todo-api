@@ -20,11 +20,19 @@ async function bootstrap() {
         }),
     );
 
+    app.enableCors({
+        origin: config.getOrThrow<string>(
+            'ORIGIN_URL',
+        ),
+        credentials: true,
+        methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    });
+
     await app.listen(
         config.getOrThrow<number>('APPLICATION_PORT'),
         () =>
             console.log(
-                `Application is running on: ${config.getOrThrow<string>('APPLICATION_URL')}`,
+                `Application is running on: ${config.getOrThrow<string>('APPLICATION_PORT')}`,
             ),
     );
 }
