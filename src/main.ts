@@ -2,6 +2,10 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import {
+    DocumentBuilder,
+    SwaggerModule,
+} from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -12,6 +16,16 @@ async function bootstrap() {
         );
 
     const config = app.get(ConfigService);
+    const swaggerConfig = new DocumentBuilder()
+        .setTitle('Todo')
+        .addBearerAuth()
+        .build();
+
+    const document = SwaggerModule.createDocument(
+        app,
+        swaggerConfig,
+    );
+    SwaggerModule.setup('api', app, document);
 
     app.use(helmet());
 
