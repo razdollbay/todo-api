@@ -1,9 +1,22 @@
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app =
+        await NestFactory.create<NestExpressApplication>(
+            AppModule,
+        );
 
-    await app.listen(process.env.PORT ?? 3000);
+    const config = app.get(ConfigService);
+
+    await app.listen(
+        config.getOrThrow<number>('APPLICATION_PORT'),
+        () =>
+            console.log(
+                `Application is running on: ${config.getOrThrow<string>('APPLICATION_URL')}`,
+            ),
+    );
 }
 bootstrap().catch((e) => console.log(e));
