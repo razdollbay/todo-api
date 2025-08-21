@@ -1,9 +1,56 @@
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import {
+    DocumentBuilder,
+    SwaggerModule,
+} from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app =
+        await NestFactory.create<NestExpressApplication>(
+            AppModule,
+        );
 
-    await app.listen(process.env.PORT ?? 3000);
+    const config = app.get(ConfigService);
+    const swaggerConfig = new DocumentBuilder()
+        .setTitle('Todo')
+        .addBearerAuth()
+        .build();
+
+    const document = SwaggerModule.createDocument(
+        app,
+        swaggerConfig,
+    );
+    SwaggerModule.setup('api', app, document);
+
+    app.use(helmet());
+
+    app.useGlobalPipes(
+        new ValidationPipe({
+            transform: true,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+        }),
+    );
+
+    app.enableCors({
+        origin: config.getOrThrow<string>(
+            'ORIGIN_URL',
+        ),
+        credentials: true,
+        methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    });
+
+    await app.listen(
+        config.getOrThrow<number>('APPLICATION_PORT'),
+        () =>
+            console.log(
+                `Application is running on: ${config.getOrThrow<string>('APPLICATION_PORT')}`,
+            ),
+    );
 }
 bootstrap().catch((e) => console.log(e));
