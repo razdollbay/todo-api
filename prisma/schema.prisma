@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+
+  email    String @unique
+  username String
+  password String
+
+  todos      Todo[]
+  categories Category[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Todo {
+  id String @id @default(uuid()) @db.Uuid
+
+  title       String
+  description String
+  priority    Priority @default(LOW)
+  isCompleted Boolean  @default(false)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String?  @map("user_id") @db.Uuid
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String?   @map("category_id") @db.Uuid
+
+  @@map("todos")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  todos     Todo[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?  @map("user_id") @db.Uuid
+
+  @@map("categories")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
